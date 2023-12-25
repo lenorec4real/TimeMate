@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, jsonify, session, redirect, url_for, render_template 
 # from google.oauth2 import service_account, credentials
 import json
+from datetime import datetime, timedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
@@ -20,7 +21,6 @@ SERVICE_ACCOUNT_FILE = '../timemate-408921-036bf6bcf7d4.json'
 # Set the redirect URI for Google's OAuth callback
 REDIRECT_URI = 'https://127.0.0.1:5000/oauth2callback'
 
-# calendar_service = build('calendar', 'v3', credentials=service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES))
 app.secret_key = os.urandom(24)
 
 # Create a Google Calendar API service
@@ -33,14 +33,7 @@ def create_google_calendar_service(credentials):
 def index():
     return 'Welcome to Rocketbrew Calendar Integration -- TimeMate!'
 
-# @app.route('/integrate-google-calendar', methods=['POST'])
-# def integrate_google_calendar():
-#     # Handle Google Calendar integration logic here
-#     # Redirect the user to Google's authorization URL and handle the callback
-#
-#     # Assume the integration is successful
-#     return jsonify({"message": "Google Calendar integration successful"}), 200
-#
+
 @app.route('/create-event', methods=['POST'])
 def create_google_calendar_event():
     data = request.get_json()
@@ -97,18 +90,14 @@ def oauth2callback():
         return redirect(url_for('prompt_additional_info'))
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 400   #
-    #     # Now, you can use the credentials for authenticated API requests
-    #     # For example, list the next 10 events from the primary calendar
-    #     calendar_service = build('calendar', 'v3', credentials=flow.credentials)
-    #     events = calendar_service.events().list(calendarId='primary', maxResults=10).execute()
-    #
-    # return jsonify(events)
+        return jsonify({"error": str(e)}), 400   
 
 @app.route('/prompt-additional-info')
 def prompt_additional_info():
     # Render a template for the user to provide additional information
     return render_template('additional_info_form.html')
+
+# create calendar event based on user input
 
 @app.route('/process-additional-info', methods=['POST'])
 def process_additional_info():
@@ -130,19 +119,22 @@ def process_additional_info():
         # creds = create_credentials(credentials_json)
         # # Build the Calendar service using the obtained credentials
         calendar_service = build('calendar', 'v3', credentials=creds )
+           # Parse the user input date to a datetime object
+        start_datetime = datetime.strptime(user_text_input.strip(), '%Y-%m-%d')
 
-        # Example: Create a Google Calendar event using the additional information
+        # Calculate end datetime by adding 30 minutes
+        end_datetime = start_datetime + timedelta(minutes=30)
+
+        # Set default values for summary and description
+        summary = 'Default Event Summary'
+        description = 'Default Event Description'
+
+        # Create an event
         event = {
-            'summary': 'Additional Info Event',
-            'description': user_text_input,
-            'start': {
-                'dateTime': datetime.now().isoformat(),
-                'timeZone': 'UTC',
-            },
-            'end': {
-                'dateTime': (datetime.now() + timedelta(hours=1)).isoformat(),
-                'timeZone': 'UTC',
-            },
+            'summary': summary,
+            'description': description,
+            'start': {'dateTime': start_datetime.isoformat(), 'timeZone': 'UTC'},
+            'end': {'dateTime': end_datetime.isoformat(), 'timeZone': 'UTC'},
         }
 
         # Insert the event into the primary calendar
