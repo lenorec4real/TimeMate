@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify, session, redirect, url_for, render_template 
-from google.oauth2 import service_account, credentials
+# from google.oauth2 import service_account, credentials
 import json
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -20,7 +20,7 @@ SERVICE_ACCOUNT_FILE = '../timemate-408921-036bf6bcf7d4.json'
 # Set the redirect URI for Google's OAuth callback
 REDIRECT_URI = 'https://127.0.0.1:5000/oauth2callback'
 
-calendar_service = build('calendar', 'v3', credentials=service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES))
+# calendar_service = build('calendar', 'v3', credentials=service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES))
 app.secret_key = os.urandom(24)
 
 # Create a Google Calendar API service
@@ -33,14 +33,14 @@ def create_google_calendar_service(credentials):
 def index():
     return 'Welcome to Rocketbrew Calendar Integration -- TimeMate!'
 
-@app.route('/integrate-google-calendar', methods=['POST'])
-def integrate_google_calendar():
-    # Handle Google Calendar integration logic here
-    # Redirect the user to Google's authorization URL and handle the callback
-
-    # Assume the integration is successful
-    return jsonify({"message": "Google Calendar integration successful"}), 200
-
+# @app.route('/integrate-google-calendar', methods=['POST'])
+# def integrate_google_calendar():
+#     # Handle Google Calendar integration logic here
+#     # Redirect the user to Google's authorization URL and handle the callback
+#
+#     # Assume the integration is successful
+#     return jsonify({"message": "Google Calendar integration successful"}), 200
+#
 @app.route('/create-event', methods=['POST'])
 def create_google_calendar_event():
     data = request.get_json()
