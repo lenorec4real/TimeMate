@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, session, redirect, url_for, render_template 
+from flask import Flask, request, jsonify, session, redirect, url_for, render_template, render_template_string 
 import spacy
 import json
 from datetime import datetime, timedelta
@@ -104,10 +104,17 @@ def process_additional_info():
         user_timezone = request.form.get('user_timezone')
         # for date_str in parsed_dates:
         create_calendar_event(calendar_service, parsed_date, parsed_time, "Meeting", "Powered by TimeMate", user_timezone)
-        return "Additional information processed and event created successfully!"
-
+        success_message = (
+            '<p>Additional information processed and event created successfully! '
+            '<a href="{{ url_for(\'prompt_additional_info\') }}">Try Again</a></p>'
+        )
+        return render_template_string(success_message)
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        error_message = (
+            f'<p>Error: {str(e)} '
+            '<a href="{{ url_for(\'prompt_additional_info\') }}">Try Again</a></p>'
+        )
+        return render_template_string(error_message), 400
 
 def create_calendar_event(calendar_service, extracted_date, extracted_time, summary, description, user_timezone):
 

@@ -1,0 +1,66 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Additional Information Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            text-align: center; /* Center-align text in the body */
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: left; /* Reset text alignment for the form */
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Provide Additional Information</h2>
+
+<form action="{{ url_for('process_additional_info') }}" method="post">
+    <label for="text_input">Additional Information:</label>
+    <textarea id="text_input" name="text_input" rows="4" required></textarea><br>
+    <input type="hidden" id="user_timezone" name="user_timezone">
+    
+    <input type="submit" value="Submit">
+</form>
+
+<script>
+    // Add JavaScript code to set the user's timezone in a hidden input field
+    document.getElementById('user_timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+</script>
+
+</body>
+</html>
+
