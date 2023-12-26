@@ -93,6 +93,8 @@ def process_additional_info():
         )
          # Parse dates using spaCy
         parsed_date = extract_dates_with_spacy(user_text_input)
+        parsed_time = extract_times_with_spacy(user_text_input)
+
         # Build the Calendar service using the obtained credentials
         calendar_service = build('calendar', 'v3', credentials=creds )
            # Parse the user input date to a datetime object
@@ -101,15 +103,15 @@ def process_additional_info():
         # Retrieve the user's timezone
         user_timezone = request.form.get('user_timezone')
         # for date_str in parsed_dates:
-        create_calendar_event(calendar_service, parsed_date, "Meeting", "Powered by TimeMate", user_timezone)
+        create_calendar_event(calendar_service, parsed_date, parsed_time, "Meeting", "Powered by TimeMate", user_timezone)
         return "Additional information processed and event created successfully!"
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-def create_calendar_event(calendar_service, extracted_date, summary, description, user_timezone):
+def create_calendar_event(calendar_service, extracted_date, extracted_time, summary, description, user_timezone):
 
-    # extracted_date = extract_dates_with_spacy(date_str)
+    # import ipdb; ipdb.set_trace()
 
     parsed_date = None
     if extracted_date:
@@ -117,21 +119,36 @@ def create_calendar_event(calendar_service, extracted_date, summary, description
     if not parsed_date:
         print("No valid date found")
         return jsonify({"error": "No valid date found"}), 400
-        # Set the timezone to the user's local timezone
+
+    parsed_time = None
+    if extracted_time:
+        parsed_time = parse_relative_time(extracted_time)
+    if not parsed_time:
+        print("No valid time found")
+        return jsonify({"error": "No valid time found"}), 400
+
+    # Set the timezone to the user's local timezone
     local_timezone = tz.gettz(user_timezone)
 
-    # Convert the parsed date to the user's local timezone
-    parsed_date_local = parsed_date.replace(tzinfo=local_timezone)
+    # Convert the parsed date and time to the user's local timezone
+    parsed_datetime_local = datetime(
+        parsed_date.year,
+        parsed_date.month,
+        parsed_date.day,
+        parsed_time.hour,
+        parsed_time.minute,
+        tzinfo=local_timezone
+    )
 
     event = {
         "summary": summary,
         "description": description,
         "start": {
-            "dateTime": parsed_date_local.isoformat(),
+            "dateTime": parsed_datetime_local.isoformat(),
             "timeZone": user_timezone,
         },
         "end": {
-            "dateTime": (parsed_date_local + timedelta(hours=1)).isoformat(),
+            "dateTime": (parsed_datetime_local + timedelta(hours=1)).isoformat(),
             "timeZone": user_timezone,
         },
     }
@@ -139,17 +156,28 @@ def create_calendar_event(calendar_service, extracted_date, summary, description
     # Insert the event into the primary calendar
     calendar_service.events().insert(calendarId="primary", body=event).execute()
 
-
 def extract_dates_with_spacy(user_input):
     # import ipdb; ipdb.set_trace()
     doc = nlp(user_input)
     
     # Extract entities recognized as dates
     dates = [ent.text for ent in doc.ents if ent.label_ == "DATE"]
-    
     if dates:
         # Assuming the first date found is the most relevant
         return dates[0]
+    else:
+        return None
+
+
+def extract_times_with_spacy(user_input):
+    doc = nlp(user_input)
+    
+    # Extract entities recognized as times
+    times = [ent.text for ent in doc.ents if ent.label_ == "TIME"]
+    
+    if times:
+        # Assuming the first time found is the most relevant
+        return times[0]
     else:
         return None
 
@@ -163,5 +191,22 @@ def parse_relative_date(date_text):
         return parsed_result
     else:
         return None
+
+def parse_relative_time(time_text):
+    
+     # Calculate the time of the next rounded hour
+    next_round_hour = (datetime.min + timedelta(hours=(datetime.now().hour + 1))).time()
+
+    if time_text is None:
+        return next_round_hour
+
+    try:
+        # Parse the time using dateutil.parser
+        parsed_time = parser.parse(time_text).time()
+        return parsed_time
+
+    except ValueError:
+        # Return the next rounded hour if parsing fails
+        return next_round_hour
 if __name__ == '__main__':
     app.run(ssl_context = 'adhoc', debug=True)
