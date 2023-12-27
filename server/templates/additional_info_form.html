@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,57 +9,83 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            padding: 0;
-            text-align: center; /* Center-align text in the body */
+            text-align: center;
         }
+
         h2 {
-            margin-bottom: 20px;
+            color: #333;
         }
+
         form {
             max-width: 500px;
             margin: 0 auto;
-            text-align: left; /* Reset text alignment for the form */
         }
+
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
+
         textarea {
             width: 100%;
             padding: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
             box-sizing: border-box;
         }
+
+        #user_timezone {
+            display: none;
+        }
+
         input[type="submit"] {
-            padding: 10px;
             background-color: #4CAF50;
             color: white;
+            padding: 10px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
         }
-        input[type="submit"]:hover {
-            background-color: #45a049;
+
+        a {
+            text-decoration: none;
+            color: #007BFF;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .message {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
+    <h2>Provide Additional Information</h2>
 
-<h2>Provide Additional Information</h2>
+    <form action="{{ url_for('process_additional_info') }}" method="post">
+        <label for="text_input">Additional Information:</label>
+        <textarea id="text_input" name="text_input" rows="4" cols="50" required></textarea><br>
+        <input type="hidden" id="user_timezone" name="user_timezone">
+        
+        <input type="submit" value="Submit">
+    </form>
 
-<form action="{{ url_for('process_additional_info') }}" method="post">
-    <label for="text_input">Additional Information:</label>
-    <textarea id="text_input" name="text_input" rows="4" required></textarea><br>
-    <input type="hidden" id="user_timezone" name="user_timezone">
-    
-    <input type="submit" value="Submit">
-</form>
+    <!-- Add a button to return to the user prompt -->
+    <div class="message">
+        {% if success_message %}
+            <p style="color: green;">{{ success_message }}</p>
+            <a href="{{ url_for('prompt_additional_info') }}">Try Again</a>
 
-<script>
-    // Add JavaScript code to set the user's timezone in a hidden input field
-    document.getElementById('user_timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone;
-</script>
+        {% elif error_message %}
+            <p style="color: red;">{{ error_message }}</p>
+            <a href="{{ url_for('prompt_additional_info') }}">Try Again</a>
 
+        {% endif %}
+    </div>
+
+    <script>
+        // Add JavaScript code to set the user's timezone in a hidden input field
+        document.getElementById('user_timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    </script>
 </body>
 </html>
 

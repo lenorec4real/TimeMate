@@ -104,18 +104,11 @@ def process_additional_info():
         user_timezone = request.form.get('user_timezone')
         # for date_str in parsed_dates:
         create_calendar_event(calendar_service, parsed_date, parsed_time, "Meeting", "Powered by TimeMate", user_timezone)
-        success_message = (
-            '<p>Additional information processed and event created successfully! '
-            '<a href="{{ url_for(\'prompt_additional_info\') }}">Try Again</a></p>'
-        )
-        return render_template_string(success_message)
+        success_message = "Additional information processed and event created successfully!"
+        return render_template('additional_info_form.html', success_message=success_message)
     except Exception as e:
-        error_message = (
-            f'<p>Error: {str(e)} '
-            '<a href="{{ url_for(\'prompt_additional_info\') }}">Try Again</a></p>'
-        )
-        return render_template_string(error_message), 400
-
+        error_message = f"Error: {str(e)}"
+        return render_template('additional_info_form.html', error_message=error_message), 400
 def create_calendar_event(calendar_service, extracted_date, extracted_time, summary, description, user_timezone):
 
     # import ipdb; ipdb.set_trace()
