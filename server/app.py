@@ -81,9 +81,9 @@ def oauth2callback():
     except Exception as e:
         # Print the stack trace
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 400   
+        return render_template('index.html', error_message=f"Error: {str(e)}")
 
-@app.route('/prompt-additional-info')
+@app.route('/prompt-additional-info')        
 def prompt_additional_info():
     # Render a template for the user to provide additional information
     return render_template('additional_info_form.html')
