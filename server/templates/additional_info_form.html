@@ -1,10 +1,11 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Additional Information Form</title>
+    <title>Schedule a Meeting</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -59,14 +60,14 @@
     </style>
 </head>
 <body>
-    <h2>Provide Additional Information</h2>
+    <h2>Schedule a Meeting</h2>
 
     <form action="{{ url_for('process_additional_info') }}" method="post">
-        <label for="text_input">Additional Information:</label>
-        <textarea id="text_input" name="text_input" rows="4" cols="50" required></textarea><br>
+        <label for="text_input">Enter Meeting Details:</label>
+        <textarea id="text_input" name="text_input" rows="4" cols="50" placeholder="E.g., Meeting with John Doe at 3 PM tomorrow" required></textarea><br>
         <input type="hidden" id="user_timezone" name="user_timezone">
         
-        <input type="submit" value="Submit">
+        <input type="submit" value="Schedule Meeting">
     </form>
 
     <!-- Add a button to return to the user prompt -->
