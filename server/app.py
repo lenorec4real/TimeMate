@@ -1,3 +1,18 @@
+# Copyright 2023 Lenore Chen (Zhaoxi Chen)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import os
 from flask import Flask, request, jsonify, session, redirect, url_for, render_template, render_template_string 
 import spacy
@@ -13,8 +28,6 @@ from googleapiclient.discovery import build
 from datetime import datetime
 from dateutil import parser
 import traceback
-
-
 
 
 app = Flask(__name__)
@@ -35,7 +48,7 @@ def create_google_calendar_service(credentials):
 
 @app.route('/')
 def index():
-    return 'Welcome to Rocketbrew Calendar Integration -- TimeMate!'
+    return render_template('index.html')
 
 @app.route('/authorize')
 def authorize():
@@ -103,7 +116,7 @@ def process_additional_info():
         # Retrieve the user's timezone
         user_timezone = request.form.get('user_timezone')
         # for date_str in parsed_dates:
-        event = create_calendar_event(calendar_service, parsed_date, parsed_time, "Meeting", "Powered by TimeMate", user_timezone)
+        event = create_calendar_event(calendar_service, parsed_date, parsed_time, "Meeting scheduled with TimeMate", "Powered by TimeMate", user_timezone)
         if not event:
             error_message = "Error creating calendar event."
             return render_template('additional_info_form.html', error_message=error_message), 400
@@ -112,45 +125,57 @@ def process_additional_info():
         start_time = event.get('start', {}).get('dateTime', None)
 
         if start_time:
-            success_message = f"Meeting scheduled at {start_time}"
-            return render_template('additional_info_form.html', success_message=success_message)
+            # Format the start time for display
+            start_time_display = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S%z").strftime("%Y/%m/%d")
+
+            # Generate a link to view the user's calendar on the day of the scheduled meeting
+            view_meeting_link = f'https://calendar.google.com/calendar/u/0/r/week/{start_time_display}'
+
+            return render_template('additional_info_form.html', success_message=f"Meeting scheduled successfully at {start_time}!", view_meeting_link=view_meeting_link)
+
+            # return render_template('additional_info_form.html', success_message=success_message)
 
     except Exception as e:
         error_message = f"Error: {str(e)}"
         return render_template('additional_info_form.html', error_message=error_message), 400
 
 def create_calendar_event(calendar_service, extracted_date, extracted_time, summary, description, user_timezone):
-    parsed_date = parse_relative_date(extracted_date)
-    parsed_time = parse_relative_time(extracted_time)
-    # Set the timezone to the user's local timezone
-    local_timezone = tz.gettz(user_timezone)
+    try:
+        parsed_date = parse_relative_date(extracted_date)
+        parsed_time = parse_relative_time(extracted_time)
+        # Set the timezone to the user's local timezone
+        local_timezone = tz.gettz(user_timezone)
 
-    # Convert the parsed date and time to the user's local timezone
-    parsed_datetime_local = datetime(
-        parsed_date.year,
-        parsed_date.month,
-        parsed_date.day,
-        parsed_time.hour,
-        parsed_time.minute,
-        tzinfo=local_timezone
-    )
+        # Convert the parsed date and time to the user's local timezone
+        parsed_datetime_local = datetime(
+            parsed_date.year,
+            parsed_date.month,
+            parsed_date.day,
+            parsed_time.hour,
+            parsed_time.minute,
+            tzinfo=local_timezone
+        )
 
-    event = {
-        "summary": summary,
-        "description": description,
-        "start": {
-            "dateTime": parsed_datetime_local.isoformat(),
-            "timeZone": user_timezone,
-        },
-        "end": {
-            "dateTime": (parsed_datetime_local + timedelta(hours=1)).isoformat(),
-            "timeZone": user_timezone,
-        },
-    }
+        event = {
+            "summary": summary,
+            "description": description,
+            "start": {
+                "dateTime": parsed_datetime_local.isoformat(),
+                "timeZone": user_timezone,
+            },
+            "end": {
+                "dateTime": (parsed_datetime_local + timedelta(hours=1)).isoformat(),
+                "timeZone": user_timezone,
+            },
+        }
 
-    # Insert the event into the primary calendar
-    calendar_service.events().insert(calendarId="primary", body=event).execute()
-    return event
+        # Insert the event into the primary calendar
+        created_event = calendar_service.events().insert(calendarId="primary", body=event).execute()
+        return created_event
+
+    except Exception as e:
+        print(f"Error creating calendar event: {str(e)}")
+        return None
 
 def extract_dates_with_spacy(user_input):
     # import ipdb; ipdb.set_trace()

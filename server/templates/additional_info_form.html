@@ -1,11 +1,23 @@
+<!--
+Copyright 2023 Lenore Chen (Zhaoxi Chen)
 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule a Meeting</title>
+    <!-- Add your existing head content here -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,8 +30,21 @@
         }
 
         form {
-            max-width: 500px;
+            display: flex;
+            justify-content: center;
+            max-width: 800px;
             margin: 0 auto;
+        }
+
+        #inputColumn {
+            width: 50%;
+            text-align: left;
+            padding-right: 20px;
+        }
+
+        #examplesColumn {
+            width: 30%;
+            text-align: left;
         }
 
         label {
@@ -38,7 +63,7 @@
             display: none;
         }
 
-        input[type="submit"] {
+        button[type="submit"] {
             background-color: #4CAF50;
             color: white;
             padding: 10px 15px;
@@ -47,40 +72,85 @@
             cursor: pointer;
         }
 
-        a {
-            text-decoration: none;
-            color: #007BFF;
-            margin-top: 10px;
-            display: inline-block;
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
         }
 
-        .message {
+        #textExamples {
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-width: 300px;
+            margin: 20px auto;
+        }
+
+        #footer {
+            font-size: 12px;
             margin-top: 20px;
+            color: #555;
+            text-align: center;
+        }
+
+        #timeMateLink {
+            color: #007BFF;
+            text-decoration: none;
         }
     </style>
+    <script>
+        function populateTextField(exampleText) {
+            // Get the text input element
+            var textInput = document.getElementById('text_input');
+
+            // Set the value of the text input to the example text
+            textInput.value = exampleText;
+
+            // Prevent the default form submission
+            event.preventDefault();
+        }
+    </script>
 </head>
 <body>
     <h2>Schedule a Meeting</h2>
 
     <form action="{{ url_for('process_additional_info') }}" method="post">
-        <label for="text_input">Enter Meeting Details:</label>
-        <textarea id="text_input" name="text_input" rows="4" cols="50" placeholder="E.g., Meeting with John Doe at 3 PM tomorrow" required></textarea><br>
-        <input type="hidden" id="user_timezone" name="user_timezone">
+        <div id="inputColumn">
+            <label for="text_input">Enter Meeting Details:</label>
+            <textarea id="text_input" name="text_input" rows="4" cols="50" placeholder="E.g., Meeting with John Doe next week at 3pm" required></textarea><br>
+            <input type="hidden" id="user_timezone" name="user_timezone">
+            <button type="submit">Schedule Meeting</button>
+        </div>
         
-        <input type="submit" value="Schedule Meeting">
+        <div id="examplesColumn">
+            <!-- Add a frame around the example buttons -->
+            <div id="textExamples">
+                <h3>Text Examples</h3>
+                <button onclick="populateTextField('Schedule a meeting tomorrow at 10am')">Tomorrow at 10am</button>
+                <button onclick="populateTextField('Meet with colleagues next week at 2:30pm')">Next week at 2:30pm</button>
+                <button onclick="populateTextField('Call client on Friday at 4:45pm')">Friday at 4:45pm</button>
+            </div>
+        </div>
     </form>
 
-    <!-- Add a button to return to the user prompt -->
+   <!-- Add a button to return to the user prompt -->
     <div class="message">
         {% if success_message %}
             <p style="color: green;">{{ success_message }}</p>
-            <a href="{{ url_for('prompt_additional_info') }}">Schedule Another Meeting</a>
+             <p style="color: green;">
+            <a id="meetingLink" href="{{ view_meeting_link }}" target="_blank">View Meeting</a></p>
 
+            <a href="{{ url_for('prompt_additional_info') }}">Schedule Another Meeting</a>
         {% elif error_message %}
             <p style="color: red;">{{ error_message }}</p>
             <a href="{{ url_for('prompt_additional_info') }}">Try Again</a>
 
         {% endif %}
+    </div>
+
+    <div id="footer">
+      Powered by <a id="timeMateLink" href="{{ url_for('index') }}">TimeMate</a>
     </div>
 
     <script>
