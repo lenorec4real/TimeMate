@@ -103,30 +103,25 @@ def process_additional_info():
         # Retrieve the user's timezone
         user_timezone = request.form.get('user_timezone')
         # for date_str in parsed_dates:
-        create_calendar_event(calendar_service, parsed_date, parsed_time, "Meeting", "Powered by TimeMate", user_timezone)
-        success_message = "Additional information processed and event created successfully!"
-        return render_template('additional_info_form.html', success_message=success_message)
+        event = create_calendar_event(calendar_service, parsed_date, parsed_time, "Meeting", "Powered by TimeMate", user_timezone)
+        if not event:
+            error_message = "Error creating calendar event."
+            return render_template('additional_info_form.html', error_message=error_message), 400
+        
+        # Get the start time from the event
+        start_time = event.get('start', {}).get('dateTime', None)
+
+        if start_time:
+            success_message = f"Meeting scheduled at {start_time}"
+            return render_template('additional_info_form.html', success_message=success_message)
+
     except Exception as e:
         error_message = f"Error: {str(e)}"
         return render_template('additional_info_form.html', error_message=error_message), 400
+
 def create_calendar_event(calendar_service, extracted_date, extracted_time, summary, description, user_timezone):
-
-    # import ipdb; ipdb.set_trace()
-
-    parsed_date = None
-    if extracted_date:
-        parsed_date = parse_relative_date(extracted_date)
-    if not parsed_date:
-        print("No valid date found")
-        return jsonify({"error": "No valid date found"}), 400
-
-    parsed_time = None
-    if extracted_time:
-        parsed_time = parse_relative_time(extracted_time)
-    if not parsed_time:
-        print("No valid time found")
-        return jsonify({"error": "No valid time found"}), 400
-
+    parsed_date = parse_relative_date(extracted_date)
+    parsed_time = parse_relative_time(extracted_time)
     # Set the timezone to the user's local timezone
     local_timezone = tz.gettz(user_timezone)
 
@@ -155,6 +150,7 @@ def create_calendar_event(calendar_service, extracted_date, extracted_time, summ
 
     # Insert the event into the primary calendar
     calendar_service.events().insert(calendarId="primary", body=event).execute()
+    return event
 
 def extract_dates_with_spacy(user_input):
     # import ipdb; ipdb.set_trace()
@@ -182,15 +178,19 @@ def extract_times_with_spacy(user_input):
         return None
 
 def parse_relative_date(date_text):
+
+    today = datetime.now()
     if date_text is None:
-        return None
+        # if no date found, use the current date
+        return today 
+
     cal = Calendar()
     parsed_result, success = cal.parseDT(date_text)
     
     if success:
         return parsed_result
     else:
-        return None
+        return today
 
 def parse_relative_time(time_text):
     
@@ -208,5 +208,6 @@ def parse_relative_time(time_text):
     except ValueError:
         # Return the next rounded hour if parsing fails
         return next_round_hour
+
 if __name__ == '__main__':
     app.run(ssl_context = 'adhoc', debug=True)
