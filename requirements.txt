@@ -84,7 +84,6 @@ sqlparse==0.4.4
 srsly==2.4.8
 stack-data==0.6.3
 thinc==8.2.2
-thinc-apple-ops==0.1.4
 tokenizers==0.15.0
 tqdm==4.66.1
 traitlets==5.14.0
