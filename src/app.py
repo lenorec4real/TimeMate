@@ -36,7 +36,11 @@ load_dotenv()
 app = Flask(__name__)
 
 # load environment variables
-client_secrets_path = os.environ.get("CLIENT_SECRETS_PATH")
+# Get the client secrets from the environment variable
+client_secrets_json = os.getenv("CLIENT_SECRETS_JSON")
+if not client_secrets_json:
+    raise Exception("CLIENT_SECRETS_JSON environment variable not set.")
+
 SCOPES = os.environ.get("SCOPES")
 
 # Set the redirect URI based on the environment
@@ -45,9 +49,12 @@ if os.environ.get('FLASK_ENV') == 'production':
 else:
     REDIRECT_URI = os.environ.get("REDIRECT_URI_DEV")
     
-if not client_secrets_path or not SCOPES or not REDIRECT_URI:
+if not client_secrets_json or not SCOPES or not REDIRECT_URI:
     raise Exception("Missing one or more required environment variables.")
     
+# Parse the JSON string to a dictionary
+client_secrets = json.loads(client_secrets_json)
+
 app.secret_key = os.urandom(24)
 # load spacy nlp model
 nlp = spacy.load("en_core_web_sm")
@@ -63,11 +70,16 @@ def index():
 
 @app.route('/authorize')
 def authorize():
-    flow = Flow.from_client_secrets_file(
-        client_secrets_path,
+    flow = Flow.from_client_config(
+        client_config=client_secrets,
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI
     )
+    # flow = Flow.from_client_secrets_file(
+    #     client_secrets_path,
+    #     scopes=SCOPES,
+    #     redirect_uri=REDIRECT_URI
+    # )
     authorization_url, state = flow.authorization_url(
         access_type='offline', prompt='consent'
     )
@@ -78,10 +90,15 @@ def authorize():
 def oauth2callback():
     try:
         state = session['oauth_state']
-        flow = Flow.from_client_secrets_file(
-            client_secrets_path,
+        # flow = Flow.from_client_secrets_file(
+        #     client_secrets_path,
+        #     scopes=SCOPES,
+        #     state=state,
+        #     redirect_uri=REDIRECT_URI
+        # )
+        flow = Flow.from_client_config(
+            client_config=client_secrets,
             scopes=SCOPES,
-            state=state,
             redirect_uri=REDIRECT_URI
         )
         flow.fetch_token(authorization_response=request.url)
@@ -246,4 +263,4 @@ def parse_relative_time(time_text):
 
 if __name__ == '__main__':
     # app.run(ssl_context = 'adhoc', debug=True)
-    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    app.run(debug=False, ssl_context = 'adhoc', host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
