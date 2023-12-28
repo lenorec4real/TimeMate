@@ -1,0 +1,13 @@
+
+runtime: python39  # Set your Python runtime version
+
+entrypoint: gunicorn -b :$PORT app:app  # Use Gunicorn as the entrypoint
+
+env_variables:
+  FLASK_ENV: production  # Set Flask environment to production
+
+handlers:
+- url: /.*
+  script: auto
+
+# Add additional configuration if necessary
