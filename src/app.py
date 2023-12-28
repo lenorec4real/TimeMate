@@ -38,8 +38,13 @@ app = Flask(__name__)
 # load environment variables
 client_secrets_path = os.environ.get("CLIENT_SECRETS_PATH")
 SCOPES = os.environ.get("SCOPES")
-REDIRECT_URI = os.environ.get("REDIRECT_URI")
 
+# Set the redirect URI based on the environment
+if os.environ.get('FLASK_ENV') == 'production':
+    REDIRECT_URI = os.environ.get("REDIRECT_URI_PROD")
+else:
+    REDIRECT_URI = os.environ.get("REDIRECT_URI_DEV")
+    
 if not client_secrets_path or not SCOPES or not REDIRECT_URI:
     raise Exception("Missing one or more required environment variables.")
     
