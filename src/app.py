@@ -28,15 +28,21 @@ from googleapiclient.discovery import build
 from datetime import datetime
 from dateutil import parser
 import traceback
+from dotenv import load_dotenv
 
+# Load environment variables from the .env file
+load_dotenv()
 
 app = Flask(__name__)
 
-# Replace with your own Google Calendar API credentials
-SCOPES = ['https://www.googleapis.com/auth/calendar']
-# Set the redirect URI for Google's OAuth callback
-REDIRECT_URI = 'https://127.0.0.1:5000/oauth2callback'
+# load environment variables
+client_secrets_path = os.environ.get("CLIENT_SECRETS_PATH")
+SCOPES = os.environ.get("SCOPES")
+REDIRECT_URI = os.environ.get("REDIRECT_URI")
 
+if not client_secrets_path or not SCOPES or not REDIRECT_URI:
+    raise Exception("Missing one or more required environment variables.")
+    
 app.secret_key = os.urandom(24)
 # load spacy nlp model
 nlp = spacy.load("en_core_web_sm")
@@ -53,7 +59,7 @@ def index():
 @app.route('/authorize')
 def authorize():
     flow = Flow.from_client_secrets_file(
-        '../client_secret_web.json',
+        client_secrets_path,
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI
     )
@@ -68,7 +74,7 @@ def oauth2callback():
     try:
         state = session['oauth_state']
         flow = Flow.from_client_secrets_file(
-            '../client_secret_web.json',
+            client_secrets_path,
             scopes=SCOPES,
             state=state,
             redirect_uri=REDIRECT_URI
@@ -122,17 +128,16 @@ def process_additional_info():
         
         # Get the start time from the event
         start_time = event.get('start', {}).get('dateTime', None)
+        calendar_id = event.get('organizer', {}).get('email')
 
         if start_time:
             # Format the start time for display
             start_time_display = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S%z").strftime("%Y/%m/%d")
 
             # Generate a link to view the user's calendar on the day of the scheduled meeting
-            view_meeting_link = f'https://calendar.google.com/calendar/u/0/r/week/{start_time_display}'
+            view_meeting_link = f'https://calendar.google.com/calendar/r/week/{start_time_display}?tab=mc&pli=1&gsessionid={calendar_id}'
 
             return render_template('additional_info_form.html', success_message=f"Meeting scheduled successfully at {start_time}!", view_meeting_link=view_meeting_link)
-
-            # return render_template('additional_info_form.html', success_message=success_message)
 
     except Exception as e:
         error_message = f"Error: {str(e)}"
