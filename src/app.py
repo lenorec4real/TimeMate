@@ -116,10 +116,9 @@ def process_additional_info():
         # Retrieve the user's timezone
         user_timezone = request.form.get('user_timezone')
         # for date_str in parsed_dates:
-        event = create_calendar_event(calendar_service, parsed_date, parsed_time, "Meeting scheduled with TimeMate", "Powered by TimeMate", user_timezone)
+        event, error_msg = create_calendar_event(calendar_service, parsed_date, parsed_time, "Meeting scheduled with TimeMate", "Powered by TimeMate", user_timezone)
         if not event:
-            error_message = "Error creating calendar event."
-            return render_template('additional_info_form.html', error_message=error_message), 400
+            return render_template('additional_info_form.html', error_message=error_msg), 400
         
         # Get the start time from the event
         start_time = event.get('start', {}).get('dateTime', None)
@@ -141,6 +140,8 @@ def process_additional_info():
 
 def create_calendar_event(calendar_service, extracted_date, extracted_time, summary, description, user_timezone):
     try:
+        if not extracted_date and not extracted_time:
+            raise Exception("No date or time found")
         parsed_date = parse_relative_date(extracted_date)
         parsed_time = parse_relative_time(extracted_time)
         # Set the timezone to the user's local timezone
@@ -171,11 +172,10 @@ def create_calendar_event(calendar_service, extracted_date, extracted_time, summ
 
         # Insert the event into the primary calendar
         created_event = calendar_service.events().insert(calendarId="primary", body=event).execute()
-        return created_event
+        return created_event, None
 
     except Exception as e:
-        print(f"Error creating calendar event: {str(e)}")
-        return None
+        return None, str(e)
 
 def extract_dates_with_spacy(user_input):
     # import ipdb; ipdb.set_trace()
