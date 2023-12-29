@@ -261,5 +261,5 @@ def parse_relative_time(time_text):
         return next_round_hour
 
 if __name__ == '__main__':
-    app.run(ssl_context = 'adhoc', debug=True)
+    # app.run(ssl_context = 'adhoc', debug=True)
     app.run(debug=False, ssl_context = 'adhoc', host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
