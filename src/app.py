@@ -69,12 +69,16 @@ def index():
 
 @app.route('/authorize')
 def authorize():
-    # import ipdb; ipdb.set_trace()
     flow = Flow.from_client_config(
         client_config=client_secrets,
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI
     )
+    # flow = Flow.from_client_secrets_file(
+    #     client_secrets_path,
+    #     scopes=SCOPES,
+    #     redirect_uri=REDIRECT_URI
+    # )
     authorization_url, state = flow.authorization_url(
         access_type='offline', prompt='consent'
     )
@@ -85,6 +89,12 @@ def authorize():
 def oauth2callback():
     try:
         state = session['oauth_state']
+        # flow = Flow.from_client_secrets_file(
+        #     client_secrets_path,
+        #     scopes=SCOPES,
+        #     state=state,
+        #     redirect_uri=REDIRECT_URI
+        # )
         flow = Flow.from_client_config(
             client_config=client_secrets,
             scopes=SCOPES,
@@ -251,8 +261,7 @@ def parse_relative_time(time_text):
         return next_round_hour
 
 if __name__ == '__main__':
-    # app.run(ssl_context = 'adhoc', debug=False)
-    app.run(debug=False, ssl_context = 'adhoc', host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
-    # app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    # app.run(ssl_context = 'adhoc', debug=True)
+    # app.run(debug=False, ssl_context = 'adhoc', host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
-    # app.run(ssl_context = 'adhoc', debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
