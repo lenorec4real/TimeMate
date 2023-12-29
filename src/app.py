@@ -88,6 +88,8 @@ def authorize():
 @app.route('/oauth2callback')
 def oauth2callback():
     try:
+        print("printing url" + request.url)
+
         state = session['oauth_state']
         # flow = Flow.from_client_secrets_file(
         #     client_secrets_path,
