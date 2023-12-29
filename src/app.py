@@ -34,7 +34,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-
 # load environment variables
 # Get the client secrets from the environment variable
 client_secrets_json = os.getenv("CLIENT_SECRETS_JSON")
@@ -262,5 +261,5 @@ def parse_relative_time(time_text):
         return next_round_hour
 
 if __name__ == '__main__':
-    # app.run(ssl_context = 'adhoc', debug=True)
-    app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    app.run(ssl_context = 'adhoc', debug=True)
+    # app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
