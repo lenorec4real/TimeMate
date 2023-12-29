@@ -29,6 +29,8 @@ from datetime import datetime
 from dateutil import parser
 import traceback
 from dotenv import load_dotenv
+import logging
+
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -74,11 +76,6 @@ def authorize():
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI
     )
-    # flow = Flow.from_client_secrets_file(
-    #     client_secrets_path,
-    #     scopes=SCOPES,
-    #     redirect_uri=REDIRECT_URI
-    # )
     authorization_url, state = flow.authorization_url(
         access_type='offline', prompt='consent'
     )
@@ -88,21 +85,14 @@ def authorize():
 @app.route('/oauth2callback')
 def oauth2callback():
     try:
-        print("printing url" + request.url)
-
         state = session['oauth_state']
-        # flow = Flow.from_client_secrets_file(
-        #     client_secrets_path,
-        #     scopes=SCOPES,
-        #     state=state,
-        #     redirect_uri=REDIRECT_URI
-        # )
         flow = Flow.from_client_config(
             client_config=client_secrets,
             scopes=SCOPES,
             redirect_uri=REDIRECT_URI
         )
-        flow.fetch_token(authorization_response=request.url)
+        # manually enforce https till the ssl certificate is obtained
+        flow.fetch_token(authorization_response=request.url.replace("http://", "https://"))
         session['credentials'] = flow.credentials.to_json()
 
         return redirect(url_for('prompt_additional_info'))
@@ -265,5 +255,10 @@ def parse_relative_time(time_text):
 if __name__ == '__main__':
     # app.run(ssl_context = 'adhoc', debug=True)
     # app.run(debug=False, ssl_context = 'adhoc', host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    if os.environ.get('FLASK_ENV') == 'production':
+
+        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    else:
+        app.run(ssl_context = 'adhoc', debug=True)
+
 
